@@ -22,6 +22,15 @@ UNCERTAIN_HIGH = 0.6
 # representative of app behavior. Costs a 2-image batch per request.
 USE_FLIP_TTA = True
 
+# Reject images whose shorter side is below this (px): the high-frequency
+# texture the model relies on is gone, so any verdict would be noise.
+MIN_SIDE = 200
+
+
+class ImageTooSmallError(ValueError):
+    """Raised when an input image is below MIN_SIDE on its shorter side."""
+
+
 _lock = threading.Lock()
 _model = None
 
@@ -33,6 +42,11 @@ def get_model():
         with _lock:
             if _model is None:
                 import keras
+
+                # Registers the training-only augmentation layers baked into the
+                # saved graph so load_model can deserialize them (identity at
+                # inference). See detector/aug_layers.py.
+                from . import aug_layers  # noqa: F401
 
                 _model = keras.models.load_model(settings.ML_MODEL_PATH)
     return _model
@@ -57,6 +71,13 @@ def predict_image(image: Image.Image) -> dict:
     _, height, width, _ = model.input_shape
 
     image = ImageOps.exif_transpose(image).convert("RGB")
+
+    w, h = image.size
+    if min(w, h) < MIN_SIDE:
+        raise ImageTooSmallError(
+            f"Image too small ({w}×{h}px). Use artwork at least {MIN_SIDE}px on the shorter side."
+        )
+
     image = image.resize((width, height), Image.Resampling.BILINEAR)
 
     # EfficientNetV2 has rescaling built in: feed raw [0, 255] pixels.

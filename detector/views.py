@@ -4,7 +4,7 @@ from PIL import Image, UnidentifiedImageError
 from django.shortcuts import render
 from django.templatetags.static import static
 
-from .ml import predict_image, warm_model_async
+from .ml import ImageTooSmallError, predict_image, warm_model_async
 from .urlfetch import UrlFetchError, fetch_image_bytes
 
 # Example images are optional: drop files into detector/static/detector/examples/
@@ -63,6 +63,8 @@ def detect(request):
                 context["filename"] = upload.name
             except UnidentifiedImageError:
                 context["error"] = "That file doesn't look like an artwork. Try a PNG or JPEG."
+            except OSError:
+                context["error"] = "That file is corrupt or incomplete. Try re-saving the artwork."
         elif image_url:
             context["image_url"] = image_url
             try:
@@ -72,11 +74,16 @@ def detect(request):
                 context["error"] = str(exc)
             except UnidentifiedImageError:
                 context["error"] = "That URL doesn't point to an artwork. Try a direct PNG or JPEG link."
+            except OSError:
+                context["error"] = "That file is corrupt or incomplete. Try re-saving the artwork."
         else:
             context["error"] = "Please choose an artwork, paste a link, or take a photo first."
 
         if image is not None:
-            context["result"] = predict_image(image)
+            try:
+                context["result"] = predict_image(image)
+            except ImageTooSmallError as exc:
+                context["error"] = str(exc)
 
         if _is_ajax(request):
             return render(request, "detector/_result.html", context)

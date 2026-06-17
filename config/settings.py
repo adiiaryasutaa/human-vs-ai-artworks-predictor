@@ -61,4 +61,4 @@ STATIC_URL = 'static/'
 DATA_UPLOAD_MAX_MEMORY_SIZE = 15 * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = 15 * 1024 * 1024
 
-ML_MODEL_PATH = BASE_DIR / 'models' / 'best_model3.keras'
+ML_MODEL_PATH = BASE_DIR / 'models' / 'best_model4.keras'
