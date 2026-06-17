@@ -1,0 +1,419 @@
+{% extends "detector/base.html" %}
+
+{% block title %}Analyze artwork — Human vs AI Art{% endblock %}
+
+{% block body_data %} data-initial-tab="{% if image_url %}url{% else %}upload{% endif %}"{% endblock %}
+
+{% block content %}
+<div class="mx-auto w-full max-w-xl px-5 sm:px-8 py-12 sm:py-16">
+
+  <header class="mb-8">
+    <p class="eyebrow">Art forensics</p>
+    <h1 class="mt-4 font-display font-medium text-4xl sm:text-5xl tracking-[-0.02em] leading-[1.02]">
+      Analyze your artwork
+    </h1>
+    <p class="mt-4 text-ash leading-relaxed">
+      Upload a painting, drawing, or digital piece — by file, link, clipboard, or
+      camera — and the model estimates whether a human made it or AI generated it.
+      Built for artwork, not photos.
+    </p>
+  </header>
+
+  <div class="border border-ink bg-paper">
+    <ul class="flex font-mono text-xs uppercase tracking-[0.16em] text-ash border-b border-line" role="tablist">
+      <li class="flex-1" role="presentation">
+        <button id="tab-upload" data-tab="upload" type="button" role="tab"
+                class="tab-btn inline-block w-full p-4 hover:text-ink transition-colors">Upload</button>
+      </li>
+      <li class="flex-1" role="presentation">
+        <button id="tab-url" data-tab="url" type="button" role="tab"
+                class="tab-btn inline-block w-full p-4 border-l border-line hover:text-ink transition-colors">URL</button>
+      </li>
+      <li class="flex-1" role="presentation">
+        <button id="tab-camera" data-tab="camera" type="button" role="tab"
+                class="tab-btn inline-block w-full p-4 border-l border-line hover:text-ink transition-colors">Camera</button>
+      </li>
+    </ul>
+
+    <!-- Upload tab -->
+    <div id="panel-upload" data-panel="upload" class="tab-panel p-5 sm:p-6">
+      <form method="post" action="{% url 'detect' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <label for="artwork" id="dropzone"
+               class="flex flex-col items-center justify-center w-full min-h-48 border border-dashed border-line cursor-pointer bg-ink/[0.02] hover:bg-ink/5 transition-colors overflow-hidden">
+          <div id="dropzone-prompt" class="flex flex-col items-center justify-center px-4 py-6 text-center">
+            <svg class="w-8 h-8 mb-3 text-ash" fill="none" viewBox="0 0 20 16" aria-hidden="true">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+            </svg>
+            <p class="mb-1 text-sm"><span class="font-medium">Tap to upload</span>, drag & drop, or paste</p>
+            <p class="font-mono text-xs text-ash">PNG · JPG · WEBP · up to 15 MB</p>
+          </div>
+          <img id="preview" class="hidden w-full max-h-72 object-contain" alt="Preview of selected artwork">
+          <input id="artwork" name="artwork" type="file" accept="image/png,image/jpeg,image/webp" class="hidden">
+        </label>
+        <p id="file-name" class="mt-2 font-mono text-xs text-ash truncate"></p>
+        <p id="upload-error" class="hidden mt-2 font-mono text-xs text-ai" role="alert"></p>
+        <button type="submit" class="submit-btn btn-ink mt-5 w-full">Analyze artwork</button>
+      </form>
+    </div>
+
+    <!-- URL tab -->
+    <div id="panel-url" data-panel="url" class="tab-panel hidden p-5 sm:p-6">
+      <form method="post" action="{% url 'detect' %}">
+        {% csrf_token %}
+        <label for="image_url" class="block mb-2 eyebrow">Artwork link</label>
+        <input type="url" id="image_url" name="image_url" inputmode="url"
+               value="{{ image_url|default:'' }}"
+               placeholder="https://example.com/artwork.jpg" required
+               class="block w-full rounded-none border border-line bg-ink/[0.02] p-3 text-sm text-ink placeholder:text-ash focus:border-ink focus:outline-none focus:ring-1 focus:ring-ink">
+        <p class="mt-2 font-mono text-xs text-ash">Paste a direct link to a painting or drawing (PNG, JPG or WEBP).</p>
+        <div id="url-preview-box" class="hidden mt-4 w-full border border-line bg-ink/[0.02] overflow-hidden">
+          <img id="url-preview" class="w-full max-h-72 object-contain" alt="Preview of linked image">
+        </div>
+        <p id="url-preview-error" class="hidden mt-2 font-mono text-xs text-human">
+          Couldn't preview that link — it may still work when analyzed.
+        </p>
+        <button type="submit" class="submit-btn btn-ink mt-5 w-full">Fetch &amp; analyze</button>
+      </form>
+    </div>
+
+    <!-- Camera tab -->
+    <div id="panel-camera" data-panel="camera" class="tab-panel hidden p-5 sm:p-6">
+      <div id="camera-stage" class="relative w-full min-h-48 bg-ink overflow-hidden flex items-center justify-center">
+        <video id="camera-video" class="hidden w-full" autoplay playsinline muted></video>
+        <img id="camera-shot" class="hidden w-full object-contain max-h-72" alt="Captured photo">
+        <p id="camera-hint" class="font-mono text-xs uppercase tracking-[0.16em] text-paper/60 px-4 py-12 text-center">Camera is off</p>
+      </div>
+
+      <div class="mt-4 grid grid-cols-2 gap-3">
+        <button type="button" id="camera-start" class="btn-outline h-12 text-sm">Start camera</button>
+        <button type="button" id="camera-capture" disabled class="btn-ink h-12 text-sm">Capture</button>
+      </div>
+
+      <form method="post" action="{% url 'detect' %}" enctype="multipart/form-data" id="camera-form" class="mt-3">
+        {% csrf_token %}
+        <input id="camera-file" name="artwork" type="file" accept="image/*" class="hidden">
+        <button type="submit" id="camera-analyze" disabled class="submit-btn btn-ink w-full">Analyze artwork</button>
+      </form>
+      <p id="camera-error" class="hidden mt-3 font-mono text-xs text-ai"></p>
+      <p class="mt-3 font-mono text-xs text-ash">
+        No camera access here? Use the <span class="text-ink">Upload</span> tab —
+        on phones it opens the camera too.
+      </p>
+    </div>
+  </div>
+
+  {% if examples %}
+  <div class="mt-6">
+    <p class="eyebrow">No artwork? Try one</p>
+    <div class="mt-3 flex flex-wrap gap-3">
+      {% for ex in examples %}
+      <button type="button" data-example-url="{{ ex.url }}"
+              class="border border-line hover:border-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-ink transition-colors overflow-hidden"
+              title="{{ ex.label }}" aria-label="Analyze {{ ex.label }}">
+        <img src="{{ ex.url }}" alt="{{ ex.label }}" loading="lazy" class="h-20 w-20 object-cover">
+      </button>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div id="result" class="mt-8" role="status" aria-live="polite">
+    {% include "detector/_result.html" %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const MAX_BYTES = 15 * 1024 * 1024;
+  const OK_TYPES = ["image/png", "image/jpeg", "image/webp"];
+
+  function validateFile(file) {
+    if (file.type && !OK_TYPES.includes(file.type)) return "Use a PNG, JPG or WEBP artwork.";
+    if (file.size > MAX_BYTES) return "That artwork is over 15 MB. Try a smaller file.";
+    return null;
+  }
+
+  const ACTIVE = ["text-ink", "border-b-2", "border-ink", "font-medium"];
+
+  // Camera stream state — declared up here so the initial activateTab() call,
+  // which runs stopCamera(), doesn't hit the temporal dead zone on `stream`.
+  let stream = null;
+
+  function activateTab(name) {
+    document.querySelectorAll(".tab-btn").forEach((btn) => {
+      const on = btn.dataset.tab === name;
+      ACTIVE.forEach((cls) => btn.classList.toggle(cls, on));
+      btn.setAttribute("aria-selected", on);
+    });
+    document.querySelectorAll(".tab-panel").forEach((panel) => {
+      panel.classList.toggle("hidden", panel.dataset.panel !== name);
+    });
+    if (name !== "camera") stopCamera();
+  }
+
+  document.querySelectorAll(".tab-btn").forEach((btn) => {
+    btn.addEventListener("click", () => activateTab(btn.dataset.tab));
+  });
+  // NOTE: the initial activateTab() call is at the very end of this script —
+  // it runs stopCamera(), which touches the camera consts declared further down.
+
+  const input = document.getElementById("artwork");
+  const preview = document.getElementById("preview");
+  const prompt = document.getElementById("dropzone-prompt");
+  const fileName = document.getElementById("file-name");
+  const dropzone = document.getElementById("dropzone");
+  const uploadError = document.getElementById("upload-error");
+
+  function showPreview(file) {
+    if (!file) return;
+    const err = validateFile(file);
+    if (err) {
+      uploadError.textContent = err;
+      uploadError.classList.remove("hidden");
+      input.value = "";
+      preview.classList.add("hidden");
+      prompt.classList.remove("hidden");
+      fileName.textContent = "";
+      return false;
+    }
+    uploadError.classList.add("hidden");
+    preview.src = URL.createObjectURL(file);
+    preview.classList.remove("hidden");
+    prompt.classList.add("hidden");
+    fileName.textContent = file.name;
+    return true;
+  }
+
+  input.addEventListener("change", () => showPreview(input.files[0]));
+
+  dropzone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropzone.classList.add("bg-ink/5", "border-ink");
+  });
+  dropzone.addEventListener("dragleave", () => {
+    dropzone.classList.remove("bg-ink/5", "border-ink");
+  });
+  dropzone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropzone.classList.remove("bg-ink/5", "border-ink");
+    if (e.dataTransfer.files.length) {
+      input.files = e.dataTransfer.files;
+      showPreview(input.files[0]);
+    }
+  });
+
+  document.addEventListener("paste", (e) => {
+    const files = e.clipboardData && e.clipboardData.files;
+    if (!files || !files.length) return;
+    const file = files[0];
+    if (!file.type.startsWith("image/")) return;
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    input.files = dt.files;
+    activateTab("upload");
+    showPreview(file);
+  });
+
+  const urlInput = document.getElementById("image_url");
+  const urlPreview = document.getElementById("url-preview");
+  const urlPreviewBox = document.getElementById("url-preview-box");
+  const urlPreviewError = document.getElementById("url-preview-error");
+  let urlPreviewTimer = null;
+
+  urlPreview.addEventListener("load", () => {
+    urlPreviewBox.classList.remove("hidden");
+    urlPreviewError.classList.add("hidden");
+  });
+  urlPreview.addEventListener("error", () => {
+    urlPreviewBox.classList.add("hidden");
+    if (urlInput.value.trim()) urlPreviewError.classList.remove("hidden");
+  });
+
+  function updateUrlPreview() {
+    const value = urlInput.value.trim();
+    if (!value || !/^https?:\/\//i.test(value)) {
+      urlPreviewBox.classList.add("hidden");
+      urlPreviewError.classList.add("hidden");
+      return;
+    }
+    urlPreview.src = value;
+  }
+
+  urlInput.addEventListener("input", () => {
+    clearTimeout(urlPreviewTimer);
+    urlPreviewTimer = setTimeout(updateUrlPreview, 500);
+  });
+  updateUrlPreview();
+
+  const video = document.getElementById("camera-video");
+  const shot = document.getElementById("camera-shot");
+  const hint = document.getElementById("camera-hint");
+  const startBtn = document.getElementById("camera-start");
+  const captureBtn = document.getElementById("camera-capture");
+  const analyzeBtn = document.getElementById("camera-analyze");
+  const cameraFile = document.getElementById("camera-file");
+  const cameraError = document.getElementById("camera-error");
+
+  function stopCamera() {
+    if (stream) {
+      stream.getTracks().forEach((t) => t.stop());
+      stream = null;
+    }
+    video.classList.add("hidden");
+    captureBtn.disabled = true;
+    startBtn.textContent = "Start camera";
+    if (shot.classList.contains("hidden")) hint.classList.remove("hidden");
+  }
+
+  startBtn.addEventListener("click", async () => {
+    cameraError.classList.add("hidden");
+    if (stream) { stopCamera(); return; }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      cameraError.textContent = "Camera not available in this browser (needs HTTPS or localhost). Use the Upload tab instead.";
+      cameraError.classList.remove("hidden");
+      return;
+    }
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+        audio: false,
+      });
+    } catch (err) {
+      cameraError.textContent = "Camera access denied or unavailable. Use the Upload tab instead.";
+      cameraError.classList.remove("hidden");
+      return;
+    }
+    video.srcObject = stream;
+    video.classList.remove("hidden");
+    shot.classList.add("hidden");
+    hint.classList.add("hidden");
+    captureBtn.disabled = false;
+    startBtn.textContent = "Stop camera";
+  });
+
+  captureBtn.addEventListener("click", () => {
+    if (!stream) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext("2d").drawImage(video, 0, 0);
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const file = new File([blob], "camera-shot.jpg", { type: "image/jpeg" });
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      cameraFile.files = dt.files;
+      shot.src = URL.createObjectURL(blob);
+      shot.classList.remove("hidden");
+      analyzeBtn.disabled = false;
+      stopCamera();
+      hint.classList.add("hidden");
+    }, "image/jpeg", 0.92);
+  });
+
+  const result = document.getElementById("result");
+
+  const SKELETON = `
+    <section class="border border-ink bg-paper" aria-busy="true">
+      <div class="flex items-center justify-between gap-3 border-b border-line px-5 py-3">
+        <span class="eyebrow">Verdict meter</span>
+        <span class="eyebrow">analyzing…</span>
+      </div>
+      <div class="px-5 sm:px-6 py-6">
+        <div class="flex items-center gap-3">
+          <span class="inline-block h-4 w-4 border-2 border-ink border-t-transparent rounded-full animate-spin"></span>
+          <span class="font-mono text-sm text-ash">Reading the artwork…</span>
+        </div>
+        <div class="mt-6 h-3 w-full bg-line animate-pulse"></div>
+        <p class="mt-4 font-mono text-xs text-ash">First analysis loads the model — this can take a moment.</p>
+      </div>
+    </section>`;
+
+  function errorHTML(msg) {
+    return `<div class="flex items-start gap-3 border border-ai/40 bg-ai/5 px-4 py-3 text-sm text-ai" role="alert"><span>${msg}</span></div>`;
+  }
+
+  async function submitForm(form) {
+    let previewURL = "";
+    const fileField = form.querySelector('input[type="file"]');
+    if (fileField && fileField.files && fileField.files[0]) {
+      const f = fileField.files[0];
+      const err = validateFile(f);
+      if (err) {
+        result.innerHTML = errorHTML(err);
+        return;
+      }
+      previewURL = URL.createObjectURL(f);
+    } else if (form.querySelector("#image_url")) {
+      previewURL = form.querySelector("#image_url").value.trim();
+    }
+
+    const btn = form.querySelector(".submit-btn");
+    const label = btn ? btn.textContent : "";
+    if (btn) { btn.disabled = true; btn.textContent = "Analyzing…"; }
+    result.innerHTML = SKELETON;
+    result.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    try {
+      const resp = await fetch(form.action, {
+        method: "POST",
+        body: new FormData(form),
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+      });
+      result.innerHTML = await resp.text();
+      const img = document.getElementById("result-image");
+      const fig = document.getElementById("result-figure");
+      if (img && previewURL) {
+        img.src = previewURL;
+        if (fig) fig.classList.remove("hidden");
+      }
+      const heading = document.getElementById("result-heading");
+      if (heading) heading.focus();
+      result.scrollIntoView({ behavior: "smooth", block: "start" });
+    } catch (e) {
+      result.innerHTML = errorHTML("Something went wrong analyzing that artwork. Please try again.");
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = label; }
+    }
+  }
+
+  document.querySelectorAll("form").forEach((form) => {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      submitForm(form);
+    });
+  });
+
+  result.addEventListener("click", (e) => {
+    if (e.target.closest("[data-analyze-another]")) {
+      result.innerHTML = "";
+      document.getElementById("tab-upload").scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  });
+
+  document.querySelectorAll("[data-example-url]").forEach((el) => {
+    el.addEventListener("click", async () => {
+      try {
+        const url = el.dataset.exampleUrl;
+        const resp = await fetch(url);
+        const blob = await resp.blob();
+        const name = url.split("/").pop() || "example.jpg";
+        const file = new File([blob], name, { type: blob.type || "image/jpeg" });
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        input.files = dt.files;
+        activateTab("upload");
+        if (showPreview(file)) submitForm(input.closest("form"));
+      } catch (e) {
+        result.innerHTML = errorHTML("Couldn't load that example. Try uploading an artwork instead.");
+      }
+    });
+  });
+
+  activateTab(document.body.dataset.initialTab || "upload");
+</script>
+{% endblock %}

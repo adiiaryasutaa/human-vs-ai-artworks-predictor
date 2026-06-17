@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.gradio/
+.DS_Store
+
+# ML model weights — too large for git
+models/
+*.keras
+
+# Editor
+.vscode/

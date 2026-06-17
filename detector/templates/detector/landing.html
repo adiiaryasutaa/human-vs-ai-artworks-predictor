@@ -1,0 +1,214 @@
+{% extends "detector/base.html" %}
+
+{% block title %}Human vs AI Art — Art Forensics{% endblock %}
+
+{% block content %}
+
+<section class="mx-auto w-full max-w-5xl px-5 sm:px-8 pt-16 sm:pt-24 pb-16">
+  <div class="grid gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+
+    <div>
+      <p class="eyebrow">Art forensics</p>
+      <h1 class="mt-5 font-display font-medium text-[clamp(2.6rem,7vw,4.75rem)] leading-[0.98] tracking-[-0.02em]">
+        Painted by a hand,<br class="hidden sm:block">
+        or by a <span class="italic">machine</span>?
+      </h1>
+      <p class="mt-6 max-w-md text-lg leading-relaxed text-ash">
+        Drop in a painting, drawing, or digital artwork and the model reads its
+        brushwork, texture, and generation artifacts — then tells you whether it
+        looks human-made or AI-generated, and how sure it is.
+      </p>
+      <div class="mt-9 flex flex-wrap items-center gap-3">
+        <a href="{% url 'detect' %}" class="btn-ink">Test an artwork &rarr;</a>
+        <a href="#how" class="btn-outline">How it works</a>
+      </div>
+    </div>
+
+    <!-- Signature: the Verdict Meter -->
+    <figure class="border border-ink bg-paper">
+      <figcaption class="flex items-center justify-between border-b border-line px-5 py-3">
+        <span class="eyebrow">Verdict meter</span>
+        <span class="eyebrow">sample reading</span>
+      </figcaption>
+      <div class="px-5 sm:px-7 py-8">
+        <div class="flex items-end justify-between font-mono text-xs uppercase tracking-[0.18em]">
+          <span class="text-human">Human</span>
+          <span class="text-ai">AI</span>
+        </div>
+
+        <!-- bar -->
+        <div class="relative mt-3 h-3 w-full bg-line">
+          <div class="absolute inset-y-0 left-0 bg-human" style="width:71%"></div>
+          <div class="absolute inset-y-0 right-0 bg-ai" style="width:29%"></div>
+          <div class="absolute -top-2 -bottom-2 w-px bg-ink" style="left:71%"></div>
+        </div>
+
+        <!-- ticks -->
+        <div class="mt-2 flex justify-between font-mono text-[10px] text-ash">
+          <span>0</span><span>25</span><span>50</span><span>75</span><span>100</span>
+        </div>
+
+        <div class="mt-8 border-t border-line pt-6">
+          <p class="eyebrow">Verdict</p>
+          <p class="mt-2 font-display text-3xl">Likely Human</p>
+          <p class="mt-3 font-mono text-sm text-ash">confidence&nbsp;&nbsp;71.0% human · 29.0% ai</p>
+        </div>
+      </div>
+    </figure>
+
+  </div>
+</section>
+
+<section id="how" class="mx-auto w-full max-w-5xl px-5 sm:px-8 py-16 scroll-mt-20">
+  <div class="flex items-baseline justify-between border-b border-line pb-4">
+    <h2 class="font-display text-2xl sm:text-3xl">How it works</h2>
+    <p class="eyebrow">Three steps</p>
+  </div>
+
+  <ol class="mt-10 grid gap-10 sm:grid-cols-3">
+    <li>
+      <p class="font-mono text-sm text-ash">01</p>
+      <h3 class="mt-3 font-display text-xl">Submit an artwork</h3>
+      <p class="mt-2 text-ash leading-relaxed">
+        A painting, drawing, or digital piece — by file, link, clipboard, or
+        camera. PNG, JPG, or WEBP.
+      </p>
+    </li>
+    <li>
+      <p class="font-mono text-sm text-ash">02</p>
+      <h3 class="mt-3 font-display text-xl">The model looks</h3>
+      <p class="mt-2 text-ash leading-relaxed">
+        An EfficientNetV2 classifier studies the artwork and its mirror, averaging
+        both reads for a steadier judgment.
+      </p>
+    </li>
+    <li>
+      <p class="font-mono text-sm text-ash">03</p>
+      <h3 class="mt-3 font-display text-xl">You get a verdict</h3>
+      <p class="mt-2 text-ash leading-relaxed">
+        Human, AI, or Not sure — with a confidence reading on the verdict meter.
+      </p>
+    </li>
+  </ol>
+</section>
+
+<section class="mx-auto w-full max-w-5xl px-5 sm:px-8 py-16">
+  <div class="grid gap-10 lg:grid-cols-[0.8fr_1.2fr]">
+    <div>
+      <p class="eyebrow">Under the hood</p>
+      <h2 class="mt-4 font-display text-2xl sm:text-3xl leading-tight">
+        An honest read, not a verdict carved in stone
+      </h2>
+    </div>
+
+    <dl class="grid gap-px bg-line border border-line">
+      <div class="bg-paper p-6">
+        <dt class="font-mono text-xs uppercase tracking-[0.18em] text-ash">Model</dt>
+        <dd class="mt-2 leading-relaxed">
+          An <span class="font-medium">EfficientNetV2</span> classifier trained to tell
+          human-made art from AI-generated art.
+        </dd>
+      </div>
+      <div class="bg-paper p-6">
+        <dt class="font-mono text-xs uppercase tracking-[0.18em] text-ash">Made for</dt>
+        <dd class="mt-2 leading-relaxed">
+          Artwork — paintings, drawings, and digital art. It isn't tuned for
+          photographs or screenshots, so verdicts on those are unreliable.
+        </dd>
+      </div>
+      <div class="bg-paper p-6">
+        <dt class="font-mono text-xs uppercase tracking-[0.18em] text-ash">Mirror averaging</dt>
+        <dd class="mt-2 leading-relaxed">
+          Each artwork is read alongside its horizontal flip and the two scores are
+          averaged — small changes in framing sway the result less.
+        </dd>
+      </div>
+      <div class="bg-paper p-6">
+        <dt class="font-mono text-xs uppercase tracking-[0.18em] text-ash">The grey zone</dt>
+        <dd class="mt-2 leading-relaxed">
+          When confidence lands between 40% and 60%, it says
+          <span class="italic">Not sure</span> rather than guess.
+        </dd>
+      </div>
+      <div class="bg-paper p-6">
+        <dt class="font-mono text-xs uppercase tracking-[0.18em] text-ash">Limits</dt>
+        <dd class="mt-2 leading-relaxed">
+          Generators unlike its training data, and heavily re-compressed art,
+          can still fool it. Treat results as <span class="italic">likely</span>, not proof.
+        </dd>
+      </div>
+    </dl>
+  </div>
+</section>
+
+<section class="mx-auto w-full max-w-5xl px-5 sm:px-8 py-16">
+  <div class="flex items-baseline justify-between border-b border-line pb-4">
+    <h2 class="font-display text-2xl sm:text-3xl">Questions</h2>
+    <p class="eyebrow">Good to know</p>
+  </div>
+
+  <div id="faq" data-accordion="collapse" data-active-classes="text-ink" data-inactive-classes="text-ink" class="mt-6">
+    <h3 id="faq-h1">
+      <button type="button" data-accordion-target="#faq-b1" aria-expanded="false" aria-controls="faq-b1"
+              class="flex w-full select-none items-center justify-between gap-4 border-b border-line py-5 text-left font-display text-lg focus:outline-none focus-visible:underline">
+        <span>Is my artwork stored?</span>
+        <span data-accordion-icon class="font-mono text-ash transition-transform">+</span>
+      </button>
+    </h3>
+    <div id="faq-b1" class="hidden" aria-labelledby="faq-h1">
+      <p class="border-b border-line py-5 pr-8 text-ash leading-relaxed">
+        No. There's no database. Your artwork is processed in memory for a single
+        request and discarded — nothing is saved or shared.
+      </p>
+    </div>
+
+    <h3 id="faq-h2">
+      <button type="button" data-accordion-target="#faq-b2" aria-expanded="false" aria-controls="faq-b2"
+              class="flex w-full select-none items-center justify-between gap-4 border-b border-line py-5 text-left font-display text-lg focus:outline-none focus-visible:underline">
+        <span>How accurate is it?</span>
+        <span data-accordion-icon class="font-mono text-ash transition-transform">+</span>
+      </button>
+    </h3>
+    <div id="faq-b2" class="hidden" aria-labelledby="faq-h2">
+      <p class="border-b border-line py-5 pr-8 text-ash leading-relaxed">
+        Good, not perfect. It's strongest on generators resembling its training
+        data; newer or unusual models may slip past. Read every result as
+        <em>likely</em>, never as proof.
+      </p>
+    </div>
+
+    <h3 id="faq-h3">
+      <button type="button" data-accordion-target="#faq-b3" aria-expanded="false" aria-controls="faq-b3"
+              class="flex w-full select-none items-center justify-between gap-4 border-b border-line py-5 text-left font-display text-lg focus:outline-none focus-visible:underline">
+        <span>What can I submit?</span>
+        <span data-accordion-icon class="font-mono text-ash transition-transform">+</span>
+      </button>
+    </h3>
+    <div id="faq-b3" class="hidden" aria-labelledby="faq-h3">
+      <p class="border-b border-line py-5 pr-8 text-ash leading-relaxed">
+        Paintings, drawings, and digital art as PNG, JPG, or WEBP — by file, link,
+        clipboard, or camera. It's built for artwork, not photos or screenshots.
+      </p>
+    </div>
+
+    <h3 id="faq-h4">
+      <button type="button" data-accordion-target="#faq-b4" aria-expanded="false" aria-controls="faq-b4"
+              class="flex w-full select-none items-center justify-between gap-4 border-b border-line py-5 text-left font-display text-lg focus:outline-none focus-visible:underline">
+        <span>Is pasting a link safe?</span>
+        <span data-accordion-icon class="font-mono text-ash transition-transform">+</span>
+      </button>
+    </h3>
+    <div id="faq-b4" class="hidden" aria-labelledby="faq-h4">
+      <p class="border-b border-line py-5 pr-8 text-ash leading-relaxed">
+        Links are fetched server-side with guards that reject non-image content
+        and block requests to private or internal network addresses.
+      </p>
+    </div>
+  </div>
+
+  <div class="mt-12">
+    <a href="{% url 'detect' %}" class="btn-ink">Test an artwork &rarr;</a>
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Human vs AI Art{% endblock %}</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Tailwind Play CDN: no SRI/crossorigin — the runtime JIT config + @apply
+       compile is silently skipped when this script is subresource-integrity locked. -->
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.5.2/flowbite.min.css" rel="stylesheet"
+        integrity="sha384-+Bl0lf5p8/ohqkq+KZo/rczUOIZfQpTE+zDHmmjdpnuuLiXwLaTmgCPIYAho9GqV"
+        crossorigin="anonymous">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['"Newsreader"', 'Georgia', 'serif'],
+            sans: ['"Inter"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+            mono: ['"IBM Plex Mono"', 'ui-monospace', 'monospace'],
+          },
+          colors: {
+            paper: '#EAE7DE',
+            ink: '#16140F',
+            ash: '#6C6A60',
+            line: '#CBC6B8',
+            human: '#9A6A2C',
+            ai: '#3C3A78',
+          },
+        },
+      },
+    };
+  </script>
+  <style type="text/tailwindcss">
+    @layer base {
+      body { @apply font-sans bg-paper text-ink antialiased; }
+      ::selection { @apply bg-ink text-paper; }
+    }
+    @layer components {
+      .eyebrow { @apply font-mono text-[11px] uppercase tracking-[0.22em] text-ash; }
+      .rule { @apply border-0 border-t border-line; }
+      .btn-ink {
+        @apply inline-flex items-center justify-center gap-2 h-12 px-6 bg-ink text-paper text-base font-medium
+               rounded-none transition-colors hover:bg-ink/85
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 focus-visible:ring-offset-paper
+               disabled:opacity-50 disabled:cursor-not-allowed;
+      }
+      .btn-outline {
+        @apply inline-flex items-center justify-center gap-2 h-12 px-6 border border-ink bg-transparent text-ink text-base font-medium
+               rounded-none transition-colors hover:bg-ink hover:text-paper
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 focus-visible:ring-offset-paper;
+      }
+    }
+  </style>
+  {% block head_extra %}{% endblock %}
+</head>
+<body class="min-h-screen flex flex-col"{% block body_data %}{% endblock %}>
+
+  <header class="border-b border-line">
+    <div class="mx-auto w-full max-w-5xl px-5 sm:px-8 h-16 flex items-center justify-between">
+      <a href="{% url 'landing' %}" class="font-display text-xl tracking-tight">
+        Human <span class="italic">vs</span> AI
+      </a>
+      <nav class="flex items-center gap-6">
+        <a href="{% url 'landing' %}#how" class="hidden sm:inline eyebrow hover:text-ink transition-colors">How it works</a>
+        <a href="{% url 'detect' %}" class="eyebrow hover:text-ink transition-colors">Test an artwork &rarr;</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="flex-1">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="mt-20 border-t border-line">
+    <div class="mx-auto w-full max-w-5xl px-5 sm:px-8 py-10 grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end">
+      <div class="max-w-md">
+        <p class="font-display text-lg">Human <span class="italic">vs</span> AI Art</p>
+        <p class="mt-2 text-sm text-ash leading-relaxed">
+          A detector for artwork — paintings, drawings, digital art. It's imperfect:
+          results are <em>likely</em>, not proof. Unfamiliar generators or heavily
+          re-compressed art can fool the model.
+        </p>
+      </div>
+      <p class="eyebrow sm:text-right">Art forensics &middot; nothing stored</p>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.5.2/flowbite.min.js"
+          integrity="sha384-1kLJYX46ZnwQlslYwA2oUgv/EzbmdyB4kkcJ7y1lTUYKb8kIKDM0o8JAUE0iBnii"
+          crossorigin="anonymous"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

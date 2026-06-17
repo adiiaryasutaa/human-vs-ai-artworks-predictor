@@ -1,0 +1,89 @@
+from pathlib import Path
+
+from PIL import Image, UnidentifiedImageError
+from django.shortcuts import render
+from django.templatetags.static import static
+
+from .ml import predict_image, warm_model_async
+from .urlfetch import UrlFetchError, fetch_image_bytes
+
+# Example images are optional: drop files into detector/static/detector/examples/
+# and the "try one" row turns on automatically. See that dir's README.
+EXAMPLES_DIR = "detector/examples"
+_IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp"}
+
+
+def _open_image(file_like):
+    image = Image.open(file_like)
+    image.load()
+    return image
+
+
+def _is_ajax(request):
+    return request.headers.get("x-requested-with") == "XMLHttpRequest"
+
+
+def _example_images():
+    """Static URLs for any example images present, sorted by name. Empty if none."""
+    from django.contrib.staticfiles.finders import find
+
+    found = find(EXAMPLES_DIR, all=True) or []
+    paths = found if isinstance(found, list) else [found]
+
+    names = set()
+    for base in paths:
+        directory = Path(base)
+        if directory.is_dir():
+            names.update(
+                p.name for p in directory.iterdir()
+                if p.suffix.lower() in _IMAGE_SUFFIXES
+            )
+
+    return [
+        {"url": static(f"{EXAMPLES_DIR}/{name}"), "label": f"Example {i}"}
+        for i, name in enumerate(sorted(names), start=1)
+    ]
+
+
+def landing(request):
+    return render(request, "detector/landing.html", {})
+
+
+def detect(request):
+    context = {}
+
+    if request.method == "POST":
+        upload = request.FILES.get("artwork")
+        image_url = request.POST.get("image_url", "").strip()
+        image = None
+
+        if upload is not None:
+            try:
+                image = _open_image(upload)
+                context["filename"] = upload.name
+            except UnidentifiedImageError:
+                context["error"] = "That file doesn't look like an artwork. Try a PNG or JPEG."
+        elif image_url:
+            context["image_url"] = image_url
+            try:
+                image = _open_image(fetch_image_bytes(image_url))
+                context["filename"] = image_url
+            except UrlFetchError as exc:
+                context["error"] = str(exc)
+            except UnidentifiedImageError:
+                context["error"] = "That URL doesn't point to an artwork. Try a direct PNG or JPEG link."
+        else:
+            context["error"] = "Please choose an artwork, paste a link, or take a photo first."
+
+        if image is not None:
+            context["result"] = predict_image(image)
+
+        if _is_ajax(request):
+            return render(request, "detector/_result.html", context)
+
+        return render(request, "detector/index.html", context)
+
+    # GET: warm the model while the user picks an image, and offer examples.
+    warm_model_async()
+    context["examples"] = _example_images()
+    return render(request, "detector/index.html", context)

@@ -1,0 +1,5 @@
+django>=5.0
+tensorflow>=2.16
+keras>=3.11
+pillow
+numpy

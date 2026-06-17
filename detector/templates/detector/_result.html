@@ -1,0 +1,53 @@
+{% if error %}
+<div class="flex items-start gap-3 border border-ai/40 bg-ai/5 px-4 py-3 text-sm text-ai" role="alert">
+  <svg class="mt-0.5 shrink-0 w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+    <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
+  </svg>
+  <span>{{ error }}</span>
+</div>
+{% endif %}
+
+{% if result %}
+<section class="border border-ink bg-paper" aria-label="Result">
+  <div class="flex items-center justify-between gap-3 border-b border-line px-5 py-3">
+    <span class="eyebrow">Verdict meter</span>
+    {% if result.verdict == "Likely Human" %}
+    <span class="font-mono text-xs uppercase tracking-[0.16em] text-human">{{ result.human_pct }}% human</span>
+    {% elif result.verdict == "Likely AI" %}
+    <span class="font-mono text-xs uppercase tracking-[0.16em] text-ai">{{ result.ai_pct }}% ai</span>
+    {% else %}
+    <span class="font-mono text-xs uppercase tracking-[0.16em] text-ash">uncertain</span>
+    {% endif %}
+  </div>
+
+  <figure id="result-figure" class="border-b border-line bg-ink/[0.02] {% if not image_url %}hidden{% endif %}">
+    <img id="result-image" class="w-full max-h-80 object-contain" alt="The analyzed artwork"
+         {% if image_url %}src="{{ image_url }}"{% endif %}>
+  </figure>
+
+  <div class="px-5 sm:px-6 py-6">
+    <h2 id="result-heading" tabindex="-1" class="font-display text-3xl focus:outline-none">{{ result.verdict }}</h2>
+    {% if filename %}
+    <p class="mt-2 font-mono text-xs text-ash truncate">Source: {{ filename }}</p>
+    {% endif %}
+
+    <div class="mt-6 flex items-end justify-between font-mono text-xs uppercase tracking-[0.18em]">
+      <span class="text-human">Human</span>
+      <span class="text-ai">AI</span>
+    </div>
+    <div class="relative mt-3 h-3 w-full bg-line">
+      <div class="absolute inset-y-0 left-0 bg-human" style="width: {{ result.human_pct }}%"></div>
+      <div class="absolute inset-y-0 right-0 bg-ai" style="width: {{ result.ai_pct }}%"></div>
+      <div class="absolute -top-2 -bottom-2 w-px bg-ink" style="left: {{ result.human_pct }}%"></div>
+    </div>
+    <div class="mt-2 flex justify-between font-mono text-sm">
+      <span class="text-human">{{ result.human_pct }}%</span>
+      <span class="text-ai">{{ result.ai_pct }}%</span>
+    </div>
+
+    <button type="button" data-analyze-another class="btn-outline mt-7 h-11 text-sm">
+      Analyze another
+    </button>
+  </div>
+</section>
+{% endif %}
