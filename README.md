@@ -1,3 +1,13 @@
+---
+title: Human vs AI Art Detector
+emoji: 🎨
+colorFrom: gray
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # Human vs AI Art
 
 Django web app that estimates whether a piece of **artwork** — a painting,
@@ -34,8 +44,26 @@ python3.12 -m venv .venv
 ### Model weights
 
 The `.keras` model files are **not in the repo** (too large — see `.gitignore`).
-Place a trained model in `models/` and point `ML_MODEL_PATH` at it in
-`config/settings.py` (default: `models/best_model2.keras`).
+For local dev, place a trained model in `models/` (default path:
+`models/best_model4.keras`, set by `ML_MODEL_PATH` in `config/settings.py`).
+
+## Deploy (Hugging Face Spaces, Docker)
+
+The repo ships a `Dockerfile` and HF Space config (YAML header in this README).
+Weights are pulled from a Hugging Face model repo at runtime, not baked into the
+image.
+
+1. Upload the model to a public HF model repo:
+   ```bash
+   huggingface-cli upload <user>/<repo> models/best_model4.keras best_model4.keras --repo-type model
+   ```
+2. Create a Space (SDK: **Docker**) and push this repo to it.
+3. Set Space **variables**: `ML_MODEL_REPO=<user>/<repo>`, `SECRET_KEY=<random>`,
+   `DEBUG=False`. (Private model repo → also add `HF_TOKEN` as a secret.)
+
+Notes: serve over the **direct `*.hf.space` URL** for camera capture to work
+(the embedded Space iframe blocks `getUserMedia`). Static files are served by
+WhiteNoise; `collectstatic` runs at image build.
 
 ## Run
 

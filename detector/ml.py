@@ -48,7 +48,19 @@ def get_model():
                 # inference). See detector/aug_layers.py.
                 from . import aug_layers  # noqa: F401
 
-                _model = keras.models.load_model(settings.ML_MODEL_PATH)
+                # In deployment the weights live in a Hugging Face model repo;
+                # hf_hub_download fetches once and serves from cache thereafter.
+                # Locally (no ML_MODEL_REPO), use the on-disk file.
+                if settings.ML_MODEL_REPO:
+                    from huggingface_hub import hf_hub_download
+
+                    model_path = hf_hub_download(
+                        settings.ML_MODEL_REPO, settings.ML_MODEL_FILENAME
+                    )
+                else:
+                    model_path = settings.ML_MODEL_PATH
+
+                _model = keras.models.load_model(model_path)
     return _model
 
 

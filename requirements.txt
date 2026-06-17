@@ -3,3 +3,6 @@ tensorflow>=2.16
 keras>=3.11
 pillow
 numpy
+gunicorn
+whitenoise
+huggingface_hub
