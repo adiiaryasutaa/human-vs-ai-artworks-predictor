@@ -69,7 +69,7 @@
       </a>
       <nav class="flex items-center gap-6">
         <a href="{% url 'landing' %}#how" class="hidden sm:inline eyebrow hover:text-ink transition-colors">How it works</a>
-        <a href="{% url 'detect' %}" class="eyebrow hover:text-ink transition-colors">Test an artwork &rarr;</a>
+        {% block nav_detect_link %}<a href="{% url 'detect' %}" class="eyebrow hover:text-ink transition-colors">Test an artwork &rarr;</a>{% endblock %}
       </nav>
     </div>
   </header>
