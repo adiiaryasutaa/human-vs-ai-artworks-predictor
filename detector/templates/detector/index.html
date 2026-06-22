@@ -158,7 +158,10 @@
   }
 
   document.querySelectorAll(".tab-btn").forEach((btn) => {
-    btn.addEventListener("click", () => activateTab(btn.dataset.tab));
+    btn.addEventListener("click", () => {
+      document.getElementById("result").innerHTML = "";
+      activateTab(btn.dataset.tab);
+    });
   });
   // NOTE: the initial activateTab() call is at the very end of this script —
   // it runs stopCamera(), which touches the camera consts declared further down.
