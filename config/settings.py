@@ -88,5 +88,5 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 15 * 1024 * 1024
 # (e.g. "user/human-vs-ai-art"); get_model() downloads + caches the weights.
 # Without it, fall back to the local file for development.
 ML_MODEL_REPO = os.environ.get('ML_MODEL_REPO')
-ML_MODEL_FILENAME = os.environ.get('ML_MODEL_FILENAME', 'best_model4.keras')
-ML_MODEL_PATH = BASE_DIR / 'models' / 'best_model4.keras'
+ML_MODEL_FILENAME = os.environ.get('ML_MODEL_FILENAME', 'best_model.keras')
+ML_MODEL_PATH = BASE_DIR / 'models' / 'best_model.keras'
