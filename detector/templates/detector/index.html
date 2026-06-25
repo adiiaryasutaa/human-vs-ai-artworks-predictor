@@ -21,6 +21,21 @@
     </p>
   </header>
 
+  {% if examples %}
+  <div class="mb-6">
+    <p class="eyebrow">No artwork? Try one</p>
+    <div class="mt-3 flex flex-wrap gap-3">
+      {% for ex in examples %}
+      <button type="button" data-example-url="{{ ex.url }}"
+              class="border border-line hover:border-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-ink transition-colors overflow-hidden"
+              title="{{ ex.label }}" aria-label="Analyze {{ ex.label }}">
+        <img src="{{ ex.url }}" alt="{{ ex.label }}" loading="lazy" class="h-20 w-20 object-cover">
+      </button>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
   <div class="border border-ink bg-paper">
     <ul class="flex font-mono text-xs uppercase tracking-[0.16em] text-ash border-b border-line" role="tablist">
       <li class="flex-1" role="presentation">
@@ -105,21 +120,6 @@
       </p>
     </div>
   </div>
-
-  {% if examples %}
-  <div class="mt-6">
-    <p class="eyebrow">No artwork? Try one</p>
-    <div class="mt-3 flex flex-wrap gap-3">
-      {% for ex in examples %}
-      <button type="button" data-example-url="{{ ex.url }}"
-              class="border border-line hover:border-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-ink transition-colors overflow-hidden"
-              title="{{ ex.label }}" aria-label="Analyze {{ ex.label }}">
-        <img src="{{ ex.url }}" alt="{{ ex.label }}" loading="lazy" class="h-20 w-20 object-cover">
-      </button>
-      {% endfor %}
-    </div>
-  </div>
-  {% endif %}
 
   <div id="result" class="mt-8" role="status" aria-live="polite">
     {% include "detector/_result.html" %}
@@ -343,18 +343,13 @@
   }
 
   async function submitForm(form) {
-    let previewURL = "";
     const fileField = form.querySelector('input[type="file"]');
     if (fileField && fileField.files && fileField.files[0]) {
-      const f = fileField.files[0];
-      const err = validateFile(f);
+      const err = validateFile(fileField.files[0]);
       if (err) {
         result.innerHTML = errorHTML(err);
         return;
       }
-      previewURL = URL.createObjectURL(f);
-    } else if (form.querySelector("#image_url")) {
-      previewURL = form.querySelector("#image_url").value.trim();
     }
 
     const btn = form.querySelector(".submit-btn");
@@ -370,12 +365,6 @@
         headers: { "X-Requested-With": "XMLHttpRequest" },
       });
       result.innerHTML = await resp.text();
-      const img = document.getElementById("result-image");
-      const fig = document.getElementById("result-figure");
-      if (img && previewURL) {
-        img.src = previewURL;
-        if (fig) fig.classList.remove("hidden");
-      }
       const heading = document.getElementById("result-heading");
       if (heading) heading.focus();
       result.scrollIntoView({ behavior: "smooth", block: "start" });

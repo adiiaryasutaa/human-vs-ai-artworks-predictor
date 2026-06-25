@@ -1,4 +1,5 @@
 {% extends "detector/base.html" %}
+{% load static %}
 
 {% block title %}Human vs AI Art — Art Forensics{% endblock %}
 
@@ -110,6 +111,17 @@
         </dd>
       </div>
       <div class="bg-paper p-6">
+        <dt class="font-mono text-xs uppercase tracking-[0.18em] text-ash">Trained on</dt>
+        <dd class="mt-2 leading-relaxed">
+          The
+          <a href="https://universe.roboflow.com/3ia12ruis-workspace/human-art-vs-ai-arts"
+             target="_blank" rel="noopener noreferrer"
+             class="underline decoration-1 underline-offset-2 hover:text-ash transition-colors">Human
+          Art vs AI Arts</a> dataset on Roboflow Universe — labelled human-made and
+          AI-generated artwork.
+        </dd>
+      </div>
+      <div class="bg-paper p-6">
         <dt class="font-mono text-xs uppercase tracking-[0.18em] text-ash">Made for</dt>
         <dd class="mt-2 leading-relaxed">
           Artwork — paintings, drawings, and digital art. It isn't tuned for
@@ -139,6 +151,87 @@
       </div>
     </dl>
   </div>
+</section>
+
+<section id="performance" class="mx-auto w-full max-w-5xl px-5 sm:px-8 py-16 scroll-mt-20">
+  <div class="flex items-baseline justify-between border-b border-line pb-4">
+    <h2 class="font-display text-2xl sm:text-3xl">How it performs</h2>
+    <p class="eyebrow">On the validation set</p>
+  </div>
+
+  <p class="mt-6 max-w-2xl text-ash leading-relaxed">
+    Two readings from training, on held-out artwork the model never learned from.
+    They show the trend, not a guarantee — treat any single verdict as
+    <span class="italic">likely</span>, not proof.
+  </p>
+
+  <div class="mt-10 grid gap-10">
+    <figure class="border border-ink bg-paper">
+      <figcaption class="flex items-center justify-between border-b border-line px-5 py-3">
+        <span class="eyebrow">Training curve</span>
+        <span class="eyebrow">accuracy · loss</span>
+      </figcaption>
+      <img src="{% static 'detector/metrics/training_curves.png' %}"
+           alt="Training and validation accuracy and loss across epochs"
+           loading="lazy" class="w-full">
+      <figcaption class="border-t border-line px-5 py-4 text-sm text-ash leading-relaxed">
+        Accuracy and loss across epochs for both the training and validation splits —
+        how the model settled as it learned.
+      </figcaption>
+    </figure>
+
+    <figure class="border border-ink bg-paper">
+      <figcaption class="flex items-center justify-between border-b border-line px-5 py-3">
+        <span class="eyebrow">Confusion matrix &amp; ROC</span>
+        <span class="eyebrow">human · ai</span>
+      </figcaption>
+      <img src="{% static 'detector/metrics/confusion_matrix_and_roc_curve.png' %}"
+           alt="Confusion matrix and ROC curve of human versus AI predictions on the validation set"
+           loading="lazy" class="w-full">
+      <figcaption class="border-t border-line px-5 py-4 text-sm text-ash leading-relaxed">
+        Predicted versus actual on the validation set, with the ROC curve — where the
+        model is right, which way it slips when wrong, and how it trades off the two.
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="dataset" class="mx-auto w-full max-w-5xl px-5 sm:px-8 py-16 scroll-mt-20">
+  <div class="flex items-baseline justify-between border-b border-line pb-4">
+    <h2 class="font-display text-2xl sm:text-3xl">The dataset</h2>
+    <p class="eyebrow">Roboflow Universe</p>
+  </div>
+
+  <p class="mt-6 max-w-2xl text-ash leading-relaxed">
+    The model learned from the
+    <a href="https://universe.roboflow.com/3ia12ruis-workspace/human-art-vs-ai-arts"
+       target="_blank" rel="noopener noreferrer"
+       class="underline decoration-1 underline-offset-2 hover:text-ink transition-colors">Human
+    Art vs AI Arts</a> dataset — labelled human-made and AI-generated artwork, hosted
+    openly on Roboflow Universe.
+  </p>
+
+  <div class="mt-7">
+    <a href="https://universe.roboflow.com/3ia12ruis-workspace/human-art-vs-ai-arts"
+       target="_blank" rel="noopener noreferrer" class="btn-outline">
+      {% include "detector/_icon_roboflow.html" %}View on Roboflow Universe &rarr;
+    </a>
+  </div>
+
+  {% if roboflow_embed_src %}
+  <figure class="mt-10 border border-ink bg-paper">
+    <figcaption class="flex items-center justify-between border-b border-line px-5 py-3">
+      <span class="eyebrow">Dataset preview</span>
+      <span class="eyebrow">interactive</span>
+    </figcaption>
+    <div class="relative w-full" style="aspect-ratio: 16 / 10;">
+      <iframe src="{{ roboflow_embed_src }}"
+              title="Human Art vs AI Arts dataset on Roboflow Universe"
+              loading="lazy" allowfullscreen
+              class="absolute inset-0 h-full w-full border-0"></iframe>
+    </div>
+  </figure>
+  {% endif %}
 </section>
 
 <section class="mx-auto w-full max-w-5xl px-5 sm:px-8 py-16">

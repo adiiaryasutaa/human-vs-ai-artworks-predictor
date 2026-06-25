@@ -84,8 +84,13 @@
       <a href="{% url 'landing' %}" class="font-display text-xl tracking-tight">
         Human <span class="italic">vs</span> AI
       </a>
-      <nav class="flex items-center gap-6">
-        <a href="{% url 'landing' %}#how" class="hidden sm:inline eyebrow hover:text-ink transition-colors">How it works</a>
+      <nav class="flex items-center gap-5 sm:gap-6">
+        <a href="https://www.kaggle.com/code/adiaryasuta/human-vs-ai-artworks"
+           target="_blank" rel="noopener noreferrer" aria-label="Kaggle notebook" title="Kaggle notebook"
+           class="text-ash hover:text-ink transition-colors">{% include "detector/_icon_kaggle.html" %}</a>
+        <a href="https://github.com/adiiaryasutaa/human-vs-ai-artworks-predictor"
+           target="_blank" rel="noopener noreferrer" aria-label="GitHub repository" title="GitHub repository"
+           class="text-ash hover:text-ink transition-colors">{% include "detector/_icon_github.html" %}</a>
         {% block nav_detect_link %}<a href="{% url 'detect' %}" class="eyebrow hover:text-ink transition-colors">Test an artwork &rarr;</a>{% endblock %}
       </nav>
     </div>
@@ -105,7 +110,21 @@
           re-compressed art can fool the model.
         </p>
       </div>
-      <p class="eyebrow sm:text-right">Art forensics &middot; nothing stored</p>
+      <div class="sm:text-right">
+        <div class="flex items-center gap-5 sm:justify-end">
+          <a href="https://www.kaggle.com/code/adiaryasuta/human-vs-ai-artworks"
+             target="_blank" rel="noopener noreferrer"
+             class="inline-flex items-center gap-2 eyebrow text-ash hover:text-ink transition-colors">
+            {% include "detector/_icon_kaggle.html" %}<span>Kaggle</span>
+          </a>
+          <a href="https://github.com/adiiaryasutaa/human-vs-ai-artworks-predictor"
+             target="_blank" rel="noopener noreferrer"
+             class="inline-flex items-center gap-2 eyebrow text-ash hover:text-ink transition-colors">
+            {% include "detector/_icon_github.html" %}<span>GitHub</span>
+          </a>
+        </div>
+        <p class="eyebrow mt-4">Art forensics &middot; nothing stored</p>
+      </div>
     </div>
   </footer>
 

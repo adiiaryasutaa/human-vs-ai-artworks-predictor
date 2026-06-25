@@ -20,11 +20,6 @@
     {% endif %}
   </div>
 
-  <figure id="result-figure" class="border-b border-line bg-ink/[0.02] {% if not image_url %}hidden{% endif %}">
-    <img id="result-image" class="w-full max-h-80 object-contain" alt="The analyzed artwork"
-         {% if image_url %}src="{{ image_url }}"{% endif %}>
-  </figure>
-
   <div class="px-5 sm:px-6 py-6">
     <h2 id="result-heading" tabindex="-1" class="font-display text-3xl focus:outline-none">{{ result.verdict }}</h2>
     {% if filename %}
